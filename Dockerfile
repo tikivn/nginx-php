@@ -7,12 +7,14 @@ ENV LANG       en_US.UTF-8
 ENV LC_ALL     en_US.UTF-8
 ENV TZ         Asia/Saigon
 
+SHELL ["/bin/bash", "-c"]
+
 # timezone and locale
 RUN apt-get update \
     && apt-get install -y software-properties-common \
         language-pack-en-base sudo \
         apt-utils tzdata locales \
-        curl wget \
+        curl wget gcc g++ make autoconf libc-dev pkg-config \
     && locale-gen en_US.UTF-8 \
     && echo $TZ > /etc/timezone \
     && ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
@@ -20,13 +22,14 @@ RUN apt-get update \
     && apt-get autoclean \
     && rm -vf /var/lib/apt/lists/*.* /tmp/* /var/tmp/*
 
-# php
+# nginx php newrelic
 RUN add-apt-repository -y ppa:nginx/stable \
     && add-apt-repository ppa:ondrej/php \
     && echo 'deb http://apt.newrelic.com/debian/ newrelic non-free' > /etc/apt/sources.list.d/newrelic.list \
     && curl -sSL https://download.newrelic.com/548C16BF.gpg | apt-key add - \
     && apt-get update \
     && apt-get install -y build-essential \
+    zlib1g-dev \
     vim \
     unzip \
     sudo \
@@ -91,8 +94,16 @@ RUN curl -sSL https://github.com/arnaud-lb/php-rdkafka/archive/3.0.5.tar.gz | ta
     && phpenmod rdkafka \
     && cd .. && rm -rf php-rdkafka-3.0.5
 
+# Install GRPC & Protobuf
+RUN pecl install grpc \
+    && echo "extension=grpc.so" > /etc/php/7.2/mods-available/grpc.ini \
+    && phpenmod grpc \
+    && pecl install protobuf \
+    && echo "extension=protobuf.so" > /etc/php/7.2/mods-available/protobuf.ini \
+    && phpenmod protobuf
+
 # Install nodejs, npm, phalcon & composer
-RUN curl -sL  https://deb.nodesource.com/setup_8.x | bash -\
+RUN curl -sL  https://deb.nodesource.com/setup_10.x | bash -\
 && apt-get install -y nodejs \
 && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
 && ln -fs /usr/bin/nodejs /usr/local/bin/node \
@@ -110,6 +121,13 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg |  apt-key add - \
 && apt-get autoclean \
 && rm -vf /var/lib/apt/lists/*.*
 
+# install telegraf
+RUN wget -qO- https://repos.influxdata.com/influxdb.key | sudo apt-key add - \
+    && source /etc/lsb-release \
+    && echo "deb https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list \
+    && sudo apt-get update \
+    && sudo apt-get install telegraf
+
 # Install superslacker (supervisord notify to slack)
 RUN curl -sSL https://raw.githubusercontent.com/luk4hn/superslacker/state_change_msg/superslacker/superslacker.py > /usr/local/bin/superslacker \
     && chmod 755 /usr/local/bin/superslacker
@@ -124,12 +142,13 @@ COPY conf/php72/www.conf /etc/php/7.2/fpm/pool.d/www.conf
 COPY conf/supervisor/supervisord.conf /etc/supervisord.conf
 COPY conf/td-agent/td-agent.conf /etc/td-agent/td-agent.conf
 
+# Telegraf
+COPY conf/telegraf/telegraf.conf /etc/telegraf/telegraf.conf
+COPY conf/telegraf/statsd.conf /etc/telegraf/telegraf.d/statsd.conf
+
 # Forward request and error logs to docker log collector
 RUN ln -sf /dev/stdout /var/log/nginx/access.log
 RUN ln -sf /dev/stderr /var/log/nginx/error.log
-
-# Add php test file
-COPY ./info.php /src/public/index.php
 
 # Start Supervisord
 COPY ./start.sh /start.sh
