@@ -132,7 +132,7 @@ RUN wget -qO- https://repos.influxdata.com/influxdb.key | sudo apt-key add - \
 RUN curl -sSL https://raw.githubusercontent.com/luk4hn/superslacker/state_change_msg/superslacker/superslacker.py > /usr/local/bin/superslacker \
     && chmod 755 /usr/local/bin/superslacker
 
-# Nginx & PHP & Supervisor configuration
+# configuration
 COPY conf/nginx/vhost.conf /etc/nginx/sites-available/default
 COPY conf/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY conf/php72/php.ini /etc/php/7.2/fpm/php.ini
@@ -141,10 +141,7 @@ COPY conf/php72/php-fpm.conf /etc/php/7.2/fpm/php-fpm.conf
 COPY conf/php72/www.conf /etc/php/7.2/fpm/pool.d/www.conf
 COPY conf/supervisor/supervisord.conf /etc/supervisord.conf
 COPY conf/td-agent/td-agent.conf /etc/td-agent/td-agent.conf
-
-# Telegraf
-COPY conf/telegraf/telegraf.conf /etc/telegraf/telegraf.conf
-COPY conf/telegraf/statsd.conf /etc/telegraf/telegraf.d/statsd.conf
+COPY conf/telegraf /etc/telegraf
 
 # Forward request and error logs to docker log collector
 RUN ln -sf /dev/stdout /var/log/nginx/access.log

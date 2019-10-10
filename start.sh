@@ -101,6 +101,29 @@ _init_tdagent(){
    sed -i "s#host 1.2.3.4#host ${_tdagent_central}#g" $_f_conf
 }
 
+# configure telegraf to send metric to time-series db
+# telegraf plugin config:
+#   INFLUXDB_URL=http://influxdb.env.tiki.services:8086
+#
+_init_telegraf(){
+  local _app_env=${APP_ENV:-local}
+  local _influxdb_url=${TK_INFLUXDB_URL}
+  local _f_conf="/etc/telegraf/telegraf.conf"
+
+  if [ $_app_env == "dev" ] || [ $_app_env == "local" ] ; then
+    _influxdb_url="http://influxdb.dev.tiki.services:8086"
+  fi
+
+  if [ -z "$_influxdb_url" ]; then
+    # Do nothing
+    echo ":: initializing telegraf ... influxdb url not found, do nothing"
+  else
+    echo ":: initializing telegraf config (influxdb url: ${_influxdb_url})"
+    sed -i "s#{{ influxdb_url }}#${_influxdb_url}#g" $_f_conf
+    service telegraf start
+  fi
+}
+
 exec_supervisord() {
     echo 'Start supervisord'
     exec /usr/bin/supervisord -n -c /etc/supervisord.conf
@@ -117,5 +140,6 @@ else
   _init_superslacker
   _init_newrelic
   _init_tdagent
+  _init_telegraf
   exec_supervisord
 fi
