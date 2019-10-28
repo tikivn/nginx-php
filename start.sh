@@ -108,21 +108,24 @@ _init_tdagent(){
 _init_telegraf(){
   local _app_env=${APP_ENV:-local}
   local _influxdb_url=${TK_INFLUXDB_URL}
+  local _gcp_sa=${TK_GCP_SERVICES_ACCOUNT}
+  local _gcp_project="${TK_GCP_PROJECT:-tiki-staging-monitoring}"
   local _f_conf="/etc/telegraf/telegraf.conf"
+  local _f_supervisor="/etc/supervisord.conf"
+  local _stackdriver_conf="/etc/telegraf/telegraf.d/stackdriver.conf"
 
-  if [ $_app_env == "dev" ] || [ $_app_env == "local" ] ; then
-    _influxdb_url="http://influxdb.dev.tiki.services:8086"
-  fi
-
-  if [ -z "$_influxdb_url" ]; then
-    # Do nothing
-    echo ":: initializing telegraf ... influxdb url not found, do nothing"
-  else
+  if [ "$_influxdb_url" != "" ]; then
     echo ":: initializing telegraf config (influxdb url: ${_influxdb_url})"
     sed -i "s#{{ influxdb_url }}#${_influxdb_url}#g" $_f_conf
-    service telegraf start
+  else if [ "$_gcp_sa" != "" ]
+    echo ":: initializing telegraf config (StackDriver with Services Key Path: ${_gcp_sa} and project_name: ${_gcp_project})"
+    sed -i "s#_google_sa_#${_gcp_sa}#g" $_f_supervisor
+    sed -i "s#_gcp_project_name#${_gcp_project}#g" $_stackdriver_conf 
+  else
+    echo "Warning: Non of Influxdb or Stackdriver config is provided !!! Telegraf will not send data"
   fi
 }
+
 
 exec_supervisord() {
     echo 'Start supervisord'
