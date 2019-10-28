@@ -117,7 +117,7 @@ _init_telegraf(){
   if [ "$_influxdb_url" != "" ]; then
     echo ":: initializing telegraf config (influxdb url: ${_influxdb_url})"
     sed -i "s#{{ influxdb_url }}#${_influxdb_url}#g" $_f_conf
-  else if [ "$_gcp_sa" != "" ]
+  elif [ "$_gcp_sa" != "" ]; then
     echo ":: initializing telegraf config (StackDriver with Services Key Path: ${_gcp_sa} and project_name: ${_gcp_project})"
     sed -i "s#_google_sa_#${_gcp_sa}#g" $_f_supervisor
     sed -i "s#_gcp_project_name#${_gcp_project}#g" $_stackdriver_conf 
