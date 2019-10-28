@@ -117,11 +117,13 @@ _init_telegraf(){
   if [ "$_influxdb_url" != "" ]; then
     echo ":: initializing telegraf config (influxdb url: ${_influxdb_url})"
     sed -i "s#{{ influxdb_url }}#${_influxdb_url}#g" $_f_conf
-  elif [ "$_gcp_sa" != "" ]; then
+  fi
+  if [ "$_gcp_sa" != "" ]; then
     echo ":: initializing telegraf config (StackDriver with Services Key Path: ${_gcp_sa} and project_name: ${_gcp_project})"
     sed -i "s#_google_sa_#${_gcp_sa}#g" $_f_supervisor
-    sed -i "s#_gcp_project_name#${_gcp_project}#g" $_stackdriver_conf 
-  else
+    sed -i "s#_gcp_project_name#${_gcp_project}#g" $_stackdriver_conf
+  fi
+  if [[ -z "$_influxdb_url" && -z "$_gcp_sa" ]]; then
     echo "Warning: Non of Influxdb or Stackdriver config is provided !!! Telegraf will not send data"
   fi
 }
