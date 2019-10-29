@@ -132,6 +132,13 @@ RUN wget -qO- https://repos.influxdata.com/influxdb.key | sudo apt-key add - \
 RUN curl -sSL https://raw.githubusercontent.com/luk4hn/superslacker/state_change_msg/superslacker/superslacker.py > /usr/local/bin/superslacker \
     && chmod 755 /usr/local/bin/superslacker
 
+# Install Beeinstant metric monitoring
+
+RUN wget https://beeinstant.com/statsbee.tar.gz \
+    && tar zxvf statsbee.tar.gz \
+    && mkdir /opt \
+    && cp -R statsbee /opt
+
 # configuration
 COPY conf/nginx/vhost.conf /etc/nginx/sites-available/default
 COPY conf/nginx/nginx.conf /etc/nginx/nginx.conf
@@ -140,6 +147,7 @@ COPY conf/php72/cli.php.ini /etc/php/7.2/cli/php.ini
 COPY conf/php72/php-fpm.conf /etc/php/7.2/fpm/php-fpm.conf
 COPY conf/php72/www.conf /etc/php/7.2/fpm/pool.d/www.conf
 COPY conf/supervisor/supervisord.conf /etc/supervisord.conf
+COPY conf/supervisor/conf.d/* /etc/supervisor/conf.d/
 COPY conf/td-agent/td-agent.conf /etc/td-agent/td-agent.conf
 COPY conf/telegraf /etc/telegraf
 

@@ -111,7 +111,9 @@ _init_telegraf(){
   local _gcp_sa=${TK_MONITORING_SERVICE_ACCOUNT}
   local _gcp_project="${TK_GCP_MONITORING_PROJECT:-tiki-staging-monitoring}"
   local _f_conf="/etc/telegraf/telegraf.conf"
-  local _f_supervisor="/etc/supervisord.conf"
+  local _f_supervisor="/etc/supervisor/conf.d/telegraf.conf"
+
+  mv /etc/supervisor/conf.d/telegraf.conf.bak /etc/supervisor/conf.d/telegraf.conf
 
   if [ "$_influxdb_url" != "" ]; then
     echo ":: initializing telegraf config (influxdb url: ${_influxdb_url})"
@@ -126,9 +128,31 @@ _init_telegraf(){
   fi
   if [[ -z "$_influxdb_url" && -z "$_gcp_sa" ]]; then
     echo "Warning: Non of Influxdb or Stackdriver config is provided !!! Telegraf will not send data"
+    rm -f /etc/supervisor/conf.d/telegraf.conf
   fi
 }
 
+_init_beeinstant(){
+  if [[ -z $TK_INFLUXDB_URL && -z $TK_MONITORING_SERVICE_ACCOUNT && "$TK_BEEINSTANT_KEY" != "" ]]; then
+    echo ":: initializing Beeinstant config"
+    local _public_key=$(echo "$TK_BEEINSTANT_KEY" | cut -d ":" -f 1)
+    local _data=$(echo "$TK_BEEINSTANT_KEY" | cut -d ":" -f 2)
+    local _private_key=$(echo "$_data" | cut -d "@" -f 1)
+    local _wss_endpoint=$(echo "$_data" | cut -d "@" -f 2)
+    local _f_supervisor="/etc/supervisor/conf.d/beeinstant.conf"
+
+    mv /etc/supervisor/conf.d/beeinstant.conf.bak /etc/supervisor/conf.d/beeinstant.conf
+
+    sed -i "s#_public_key_#${_public_key}#g" $_f_supervisor
+    sed -i "s#_private_key_#${_private_key}#g" $_f_supervisor
+    sed -i "s#_wss_endpoint_#${_wss_endpoint}#g" $_f_supervisor
+    sed -i "s#_wss_endpoint_#${_wss_endpoint}#g" $_f_supervisor
+
+  else
+    echo ":: Beeinstant will not run because Telegraf is running or TK_BEEINSTANT_KEY isn't config"
+    rm -f /etc/supervisor/conf.d/beeinstant.conf
+  fi
+}
 
 exec_supervisord() {
     echo 'Start supervisord'
@@ -147,5 +171,6 @@ else
   _init_newrelic
   _init_tdagent
   _init_telegraf
+  _init_beeinstant
   exec_supervisord
 fi

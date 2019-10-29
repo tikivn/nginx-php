@@ -1,0 +1,8 @@
+[program:statsbee]
+command=/opt/statsbee/run.sh _public_key_ _private_key_ wss://_wss_endpoint_
+process_name=%(program_name)s
+numprocs=1
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
