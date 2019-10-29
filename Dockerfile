@@ -136,8 +136,7 @@ RUN curl -sSL https://raw.githubusercontent.com/luk4hn/superslacker/state_change
 
 RUN wget https://beeinstant.com/statsbee.tar.gz \
     && tar zxvf statsbee.tar.gz \
-    && mkdir /opt \
-    && cp -R statsbee /opt
+    && cp -R agent /opt/statsbee
 
 # configuration
 COPY conf/nginx/vhost.conf /etc/nginx/sites-available/default
