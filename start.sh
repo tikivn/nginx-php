@@ -112,16 +112,17 @@ _init_telegraf(){
   local _gcp_project="${TK_GCP_MONITORING_PROJECT:-tiki-staging-monitoring}"
   local _f_conf="/etc/telegraf/telegraf.conf"
   local _f_supervisor="/etc/supervisord.conf"
-  local _stackdriver_conf="/etc/telegraf/telegraf.d/stackdriver.conf"
 
   if [ "$_influxdb_url" != "" ]; then
     echo ":: initializing telegraf config (influxdb url: ${_influxdb_url})"
-    sed -i "s#{{ influxdb_url }}#${_influxdb_url}#g" $_f_conf
+    mv /etc/telegraf/telegraf.d/influxdb.conf.bak /etc/telegraf/telegraf.d/influxdb.conf
+    sed -i "s#{{ influxdb_url }}#${_influxdb_url}#g" /etc/telegraf/telegraf.d/influxdb.conf
   fi
   if [ "$_gcp_sa" != "" ]; then
     echo ":: initializing telegraf config (StackDriver with Services Key Path: ${_gcp_sa} and project_name: ${_gcp_project})"
     sed -i "s#_google_sa_#${_gcp_sa}#g" $_f_supervisor
-    sed -i "s#_gcp_project_name#${_gcp_project}#g" $_stackdriver_conf
+    mv /etc/telegraf/telegraf.d/stackdriver.conf.bak /etc/telegraf/telegraf.d/stackdriver.conf
+    sed -i "s#_gcp_project_name#${_gcp_project}#g" /etc/telegraf/telegraf.d/stackdriver.conf
   fi
   if [[ -z "$_influxdb_url" && -z "$_gcp_sa" ]]; then
     echo "Warning: Non of Influxdb or Stackdriver config is provided !!! Telegraf will not send data"
