@@ -108,7 +108,7 @@ _init_tdagent(){
 _init_telegraf(){
   local _app_env=${APP_ENV:-local}
   local _influxdb_url=${TK_INFLUXDB_URL}
-  local _gcp_sa=${TK_GCP_SERVICES_ACCOUNT}
+  local _gcp_sa=${TK_MONITORING_SERVICE_ACCOUNT}
   local _gcp_project="${TK_GCP_MONITORING_PROJECT:-tiki-staging-monitoring}"
   local _f_conf="/etc/telegraf/telegraf.conf"
   local _f_supervisor="/etc/supervisord.conf"
