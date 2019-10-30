@@ -125,7 +125,7 @@ _init_telegraf(){
     echo ":: initializing telegraf config (StackDriver with Services Key Path: ${_gcp_sa} and project_name: ${_gcp_project})"
     sed -i "s#_google_sa_#${_gcp_sa}#g" $_f_supervisor
     mv /etc/telegraf/telegraf.d/stackdriver.conf.bak /etc/telegraf/telegraf.d/stackdriver.conf
-    sed -i "s#_gcp_project_name#${_gcp_project}#g" /etc/telegraf/telegraf.d/stackdriver.conf
+    sed -i "s#_gcp_project_name_#${_gcp_project}#g" /etc/telegraf/telegraf.d/stackdriver.conf
   fi
   if [[ "$_graphite_url" != "" ]]; then
     echo ":: initializing telegraf send to Graphite url: $_graphite_url"
