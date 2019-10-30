@@ -110,6 +110,7 @@ _init_telegraf(){
   local _influxdb_url=${TK_INFLUXDB_URL}
   local _gcp_sa=${TK_MONITORING_SERVICE_ACCOUNT}
   local _gcp_project="${TK_GCP_MONITORING_PROJECT:-tiki-staging-monitoring}"
+  local _graphite_url=${TK_GRAPHITE_URL}
   local _f_conf="/etc/telegraf/telegraf.conf"
   local _f_supervisor="/etc/supervisor/conf.d/telegraf.conf"
 
@@ -126,27 +127,36 @@ _init_telegraf(){
     mv /etc/telegraf/telegraf.d/stackdriver.conf.bak /etc/telegraf/telegraf.d/stackdriver.conf
     sed -i "s#_gcp_project_name#${_gcp_project}#g" /etc/telegraf/telegraf.d/stackdriver.conf
   fi
-  if [[ -z "$_influxdb_url" && -z "$_gcp_sa" ]]; then
-    echo "Warning: Non of Influxdb or Stackdriver config is provided !!! Telegraf will not send data"
+  fi [[ "$_graphite_url" != "" ]]; then
+    echo ":: initializing telegraf send to Graphite url: $_graphite_url"
+    mv /etc/telegraf/telegraf.d/graphite.conf.bak /etc/telegraf/telegraf.d/graphite.conf
+    sed -i "s#_graphite_url_#${_graphite_url}#g" /etc/telegraf/telegraf.d/graphite.conf
+  fi
+  if [[ -z "$_influxdb_url" && -z "$_gcp_sa" && -z "$_graphite_url" ]]; then
+    echo "Warning: Non of Influxdb or Stackdriver or Graphite config is provided !!! Telegraf will not send data"
     rm -f /etc/supervisor/conf.d/telegraf.conf
   fi
 }
 
 _init_beeinstant(){
-  if [[ -z $TK_INFLUXDB_URL && -z $TK_MONITORING_SERVICE_ACCOUNT && "$TK_BEEINSTANT_KEY" != "" ]]; then
+  if [[ "$TK_BEEINSTANT_KEY" != "" ]]; then
     echo ":: initializing Beeinstant config"
     local _public_key=$(echo "$TK_BEEINSTANT_KEY" | cut -d ":" -f 1)
     local _data=$(echo "$TK_BEEINSTANT_KEY" | cut -d ":" -f 2)
     local _private_key=$(echo "$_data" | cut -d "@" -f 1)
     local _wss_endpoint=$(echo "$_data" | cut -d "@" -f 2)
     local _f_supervisor="/etc/supervisor/conf.d/beeinstant.conf"
+    local _f_bee="/opt/statsbee/run.sh"
 
     mv /etc/supervisor/conf.d/beeinstant.conf.bak /etc/supervisor/conf.d/beeinstant.conf
+    mv /etc/telegraf/telegraf.d/beeinstant.conf.bak /etc/telegraf/telegraf.d/beeinstant.conf
 
     sed -i "s#_public_key_#${_public_key}#g" $_f_supervisor
     sed -i "s#_private_key_#${_private_key}#g" $_f_supervisor
     sed -i "s#_wss_endpoint_#${_wss_endpoint}#g" $_f_supervisor
     sed -i "s#_wss_endpoint_#${_wss_endpoint}#g" $_f_supervisor
+    #Replace default beeinstant udp port 8215 to 8216
+    sed -i "s#/opt/statsbee/statsbee#/opt/statsbee/statsbee -udp 8126#" $_f_bee
 
   else
     echo ":: Beeinstant will not run because Telegraf is running or TK_BEEINSTANT_KEY isn't config"
