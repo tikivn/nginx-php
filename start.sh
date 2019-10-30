@@ -154,9 +154,8 @@ _init_beeinstant(){
     sed -i "s#_public_key_#${_public_key}#g" $_f_supervisor
     sed -i "s#_private_key_#${_private_key}#g" $_f_supervisor
     sed -i "s#_wss_endpoint_#${_wss_endpoint}#g" $_f_supervisor
-    sed -i "s#_wss_endpoint_#${_wss_endpoint}#g" $_f_supervisor
     #Replace default beeinstant udp port 8215 to 8216
-    sed -i "s#/opt/statsbee/statsbee#/opt/statsbee/statsbee -udp 8126#" $_f_bee
+    sed -i "s#/opt/statsbee/statsbee#/opt/statsbee/statsbee -udp_port 8126#" $_f_bee
 
   else
     echo ":: Beeinstant will not run because Telegraf is running or TK_BEEINSTANT_KEY isn't config"
