@@ -127,7 +127,7 @@ _init_telegraf(){
     mv /etc/telegraf/telegraf.d/stackdriver.conf.bak /etc/telegraf/telegraf.d/stackdriver.conf
     sed -i "s#_gcp_project_name#${_gcp_project}#g" /etc/telegraf/telegraf.d/stackdriver.conf
   fi
-  fi [[ "$_graphite_url" != "" ]]; then
+  if [[ "$_graphite_url" != "" ]]; then
     echo ":: initializing telegraf send to Graphite url: $_graphite_url"
     mv /etc/telegraf/telegraf.d/graphite.conf.bak /etc/telegraf/telegraf.d/graphite.conf
     sed -i "s#_graphite_url_#${_graphite_url}#g" /etc/telegraf/telegraf.d/graphite.conf
