@@ -179,7 +179,10 @@ else
   _init_superslacker
   _init_newrelic
   _init_tdagent
-  _init_telegraf
-  _init_beeinstant
+  if [[ -z "$TK_BEEINSTANT_KEY" ]]; then
+    _init_telegraf
+  else 
+    _init_beeinstant
+  fi 
   exec_supervisord
 fi

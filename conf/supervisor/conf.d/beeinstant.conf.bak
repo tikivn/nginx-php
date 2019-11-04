@@ -1,5 +1,5 @@
 [program:statsbee]
-command=/opt/statsbee/statsbee -udp_port 8126 -public_key _public_key_ -private_key _private_key_ -endpoint wss://_wss_endpoint_
+command=/opt/statsbee/statsbee -udp_port 8125 -public_key _public_key_ -private_key _private_key_ -endpoint wss://_wss_endpoint_
 process_name=%(program_name)s
 numprocs=1
 stdout_logfile=/dev/stdout
