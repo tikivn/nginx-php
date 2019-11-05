@@ -146,7 +146,6 @@ _init_beeinstant(){
     local _private_key=$(echo "$_data" | cut -d "@" -f 1)
     local _wss_endpoint=$(echo "$_data" | cut -d "@" -f 2)
     local _f_supervisor="/etc/supervisor/conf.d/beeinstant.conf"
-    local _f_bee="/opt/statsbee/run.sh"
 
     mv /etc/supervisor/conf.d/beeinstant.conf.bak /etc/supervisor/conf.d/beeinstant.conf
     mv /etc/telegraf/telegraf.d/beeinstant.conf.bak /etc/telegraf/telegraf.d/beeinstant.conf
@@ -154,8 +153,6 @@ _init_beeinstant(){
     sed -i "s#_public_key_#${_public_key}#g" $_f_supervisor
     sed -i "s#_private_key_#${_private_key}#g" $_f_supervisor
     sed -i "s#_wss_endpoint_#${_wss_endpoint}#g" $_f_supervisor
-    #Replace default beeinstant udp port 8215 to 8216
-    sed -i "s#/opt/statsbee/statsbee#/opt/statsbee/statsbee -udp_port 8126#" $_f_bee
 
   else
     echo ":: Beeinstant will not run because Telegraf is running or TK_BEEINSTANT_KEY isn't config"
