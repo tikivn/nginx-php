@@ -42,10 +42,12 @@ _init_worker() {
     # include worker config
     [[ -d /etc/supervisor.d ]] || mkdir -v /etc/supervisor.d
     grep -q include /etc/supervisord.conf \
-    || echo -e "[include]\nfiles = /etc/supervisor.d/*.conf\n" >> /etc/supervisord.conf
+    || echo -e "[include]\nfiles = /etc/supervisor/conf.d/*.conf /etc/supervisor.d/*.conf\n" >> /etc/supervisord.conf
+  else 
+    grep -q include /etc/supervisord.conf \
+    || echo -e "[include]\nfiles = /etc/supervisor/conf.d/*.conf\n" >> /etc/supervisord.conf
   fi
 }
-
 
 # init supervisord eventlistener to notify to slack when a process change it's state
 _init_superslacker() {
