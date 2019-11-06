@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND noninteractive
 ENV LANG       en_US.UTF-8
 ENV LC_ALL     en_US.UTF-8
 ENV TZ         Asia/Saigon
-
+SHELL ["/bin/bash", "-c"]
 # timezone and locale
 RUN apt-get update \
     && apt-get install -y software-properties-common \
@@ -29,6 +29,7 @@ RUN add-apt-repository -y ppa:nginx/stable \
     && apt-get install -y build-essential \
     vim \
     unzip \
+    zlib1g-dev \
     sudo \
     dialog \
     net-tools \
@@ -92,6 +93,15 @@ RUN curl -sSL https://github.com/arnaud-lb/php-rdkafka/archive/3.0.5.tar.gz | ta
     && phpenmod rdkafka \
     && cd .. && rm -rf php-rdkafka-3.0.5
 
+# Install GRPC & Protobuf
+RUN apt-get update \
+    && pecl install grpc \
+    && echo "extension=grpc.so" > /etc/php/7.2/mods-available/grpc.ini \
+    && phpenmod grpc \
+    && pecl install protobuf \
+    && echo "extension=protobuf.so" > /etc/php/7.2/mods-available/protobuf.ini \
+    && phpenmod protobuf
+
 # Install nodejs, npm, phalcon & composer
 RUN curl -sL  https://deb.nodesource.com/setup_8.x | bash -\
 && apt-get install -y nodejs \
@@ -111,26 +121,38 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg |  apt-key add - \
 && apt-get autoclean \
 && rm -vf /var/lib/apt/lists/*.*
 
+# install telegraf
+RUN wget -qO- https://repos.influxdata.com/influxdb.key | sudo apt-key add - \
+    && source /etc/lsb-release \
+    && echo "deb https://repos.influxdata.com/${DISTRIB_ID,,} ${DISTRIB_CODENAME} stable" | sudo tee /etc/apt/sources.list.d/influxdb.list \
+    && sudo apt-get update \
+    && sudo apt-get install telegraf
+
 # Install superslacker (supervisord notify to slack)
 RUN curl -sSL https://raw.githubusercontent.com/luk4hn/superslacker/state_change_msg/superslacker/superslacker.py > /usr/local/bin/superslacker \
     && chmod 755 /usr/local/bin/superslacker
 
-# Nginx & PHP & Supervisor configuration
+# Install Beeinstant metric monitoring
+
+RUN wget https://beeinstant.com/statsbee.tar.gz \
+    && tar zxvf statsbee.tar.gz \
+    && cp -R agent /opt/statsbee
+
+# configuration
 COPY conf/nginx/vhost.conf /etc/nginx/sites-available/default
 COPY conf/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY conf/php71/php.ini /etc/php/7.1/fpm/php.ini
-COPY conf/php71/cli.php.ini /etc/php/7.1/cli/php.ini
-COPY conf/php71/php-fpm.conf /etc/php/7.1/fpm/php-fpm.conf
-COPY conf/php71/www.conf /etc/php/7.1/fpm/pool.d/www.conf
+COPY conf/php72/php.ini /etc/php/7.2/fpm/php.ini
+COPY conf/php72/cli.php.ini /etc/php/7.2/cli/php.ini
+COPY conf/php72/php-fpm.conf /etc/php/7.2/fpm/php-fpm.conf
+COPY conf/php72/www.conf /etc/php/7.2/fpm/pool.d/www.conf
 COPY conf/supervisor/supervisord.conf /etc/supervisord.conf
+COPY conf/supervisor/conf.d/* /etc/supervisor/conf.d/
 COPY conf/td-agent/td-agent.conf /etc/td-agent/td-agent.conf
+COPY conf/telegraf /etc/telegraf
 
 # Forward request and error logs to docker log collector
 RUN ln -sf /dev/stdout /var/log/nginx/access.log
 RUN ln -sf /dev/stderr /var/log/nginx/error.log
-
-# Add php test file
-COPY ./info.php /src/public/index.php
 
 # Start Supervisord
 COPY ./start.sh /start.sh

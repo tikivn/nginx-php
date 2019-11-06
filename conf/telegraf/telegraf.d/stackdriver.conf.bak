@@ -1,0 +1,5 @@
+[[outputs.stackdriver]]
+  ## GCP Project
+  project = "_gcp_project_name_"
+  namespace = "telegraf"
+  resource_type = "global"

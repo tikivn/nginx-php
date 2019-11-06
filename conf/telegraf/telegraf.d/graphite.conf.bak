@@ -1,0 +1,5 @@
+[[outputs.graphite]]
+  servers = ["_graphite_url_"]
+  prefix = ""
+  template = "host.tags.measurement.field"
+  timeout = 2

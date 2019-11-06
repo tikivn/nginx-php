@@ -1,5 +1,7 @@
 #!/bin/bash
 
+PHP_VERSION="7.2"
+
 # enable xdebug if ENV variable TK_XDEBUG_ENABLED == 1
 _init_xdebug() {
   local _xdebug_enableb=0
@@ -8,9 +10,9 @@ _init_xdebug() {
   echo ":: initializing xdebug config (_xdebug_enableb=${_xdebug_enableb})"
 
   if [[ $_xdebug_enableb == 1 ]] ; then
-    echo -e "zend_extension=xdebug.so\nxdebug.remote_enable = on" > /etc/php/7.1/mods-available/xdebug.ini
-    ln -svf /etc/php/7.1/mods-available/xdebug.ini /etc/php/7.1/cli/conf.d/20-xdebug.ini
-    ln -svf /etc/php/7.1/mods-available/xdebug.ini /etc/php/7.1/fpm/conf.d/20-xdebug.ini
+    echo -e "zend_extension=xdebug.so\nxdebug.remote_enable = on" > /etc/php/${PHP_VERSION}/mods-available/xdebug.ini
+    ln -svf /etc/php/${PHP_VERSION}/mods-available/xdebug.ini /etc/php/${PHP_VERSION}/cli/conf.d/20-xdebug.ini
+    ln -svf /etc/php/${PHP_VERSION}/mods-available/xdebug.ini /etc/php/${PHP_VERSION}/fpm/conf.d/20-xdebug.ini
   fi
 }
 
@@ -76,15 +78,15 @@ _init_newrelic() {
   echo ":: initializing newrelic config (_newrelic_enableb=${_newrelic_enableb})"
 
   if [[ $_newrelic_enableb == 1 ]] ; then
-    local _f_conf="/etc/php/7.1/mods-available/newrelic.ini"
+    local _f_conf="/etc/php/${PHP_VERSION}/mods-available/newrelic.ini"
     local _license=${TK_NEWRELIC_LICENSE:-}
     local _app_name=${TK_NEWRELIC_APPNAME:-tk-nginx-php}
 
     sed -i "s#newrelic.license = .*#newrelic.license = \"${_license}\"#g" $_f_conf
     sed -i "s#newrelic.appname = .*#newrelic.appname = \"${_app_name}\"#g" $_f_conf
 
-    ln -svf "$_f_conf" /etc/php/7.1/cli/conf.d/20-newrelic.ini
-    ln -svf "$_f_conf" /etc/php/7.1/fpm/conf.d/20-newrelic.ini
+    ln -svf "$_f_conf" /etc/php/${PHP_VERSION}/cli/conf.d/20-newrelic.ini
+    ln -svf "$_f_conf" /etc/php/${PHP_VERSION}/fpm/conf.d/20-newrelic.ini
   fi
 }
 
@@ -97,6 +99,65 @@ _init_tdagent(){
   local _f_conf="/etc/td-agent/td-agent.conf"
   echo ":: initializing td-agent config (central server: ${_tdagent_central})"
    sed -i "s#host 1.2.3.4#host ${_tdagent_central}#g" $_f_conf
+}
+
+# configure telegraf to send metric to time-series db
+# telegraf plugin config:
+#   INFLUXDB_URL=http://influxdb.env.tiki.services:8086
+#
+_init_telegraf(){
+  local _app_env=${APP_ENV:-local}
+  local _influxdb_url=${TK_INFLUXDB_URL}
+  local _gcp_sa=${TK_MONITORING_SERVICE_ACCOUNT}
+  local _gcp_project="${TK_GCP_MONITORING_PROJECT:-tiki-staging-monitoring}"
+  local _graphite_url=${TK_GRAPHITE_URL}
+  local _f_conf="/etc/telegraf/telegraf.conf"
+  local _f_supervisor="/etc/supervisor/conf.d/telegraf.conf"
+
+  mv /etc/supervisor/conf.d/telegraf.conf.bak /etc/supervisor/conf.d/telegraf.conf
+
+  if [ "$_influxdb_url" != "" ]; then
+    echo ":: initializing telegraf config (influxdb url: ${_influxdb_url})"
+    mv /etc/telegraf/telegraf.d/influxdb.conf.bak /etc/telegraf/telegraf.d/influxdb.conf
+    sed -i "s#{{ influxdb_url }}#${_influxdb_url}#g" /etc/telegraf/telegraf.d/influxdb.conf
+  fi
+  if [ "$_gcp_sa" != "" ]; then
+    echo ":: initializing telegraf config (StackDriver with Services Key Path: ${_gcp_sa} and project_name: ${_gcp_project})"
+    sed -i "s#_google_sa_#${_gcp_sa}#g" $_f_supervisor
+    mv /etc/telegraf/telegraf.d/stackdriver.conf.bak /etc/telegraf/telegraf.d/stackdriver.conf
+    sed -i "s#_gcp_project_name_#${_gcp_project}#g" /etc/telegraf/telegraf.d/stackdriver.conf
+  fi
+  if [[ "$_graphite_url" != "" ]]; then
+    echo ":: initializing telegraf send to Graphite url: $_graphite_url"
+    mv /etc/telegraf/telegraf.d/graphite.conf.bak /etc/telegraf/telegraf.d/graphite.conf
+    sed -i "s#_graphite_url_#${_graphite_url}#g" /etc/telegraf/telegraf.d/graphite.conf
+  fi
+  if [[ -z "$_influxdb_url" && -z "$_gcp_sa" && -z "$_graphite_url" ]]; then
+    echo "Warning: Non of Influxdb or Stackdriver or Graphite config is provided !!! Telegraf will not send data"
+    rm -f /etc/supervisor/conf.d/telegraf.conf
+  fi
+}
+
+_init_beeinstant(){
+  if [[ "$TK_BEEINSTANT_KEY" != "" ]]; then
+    echo ":: initializing Beeinstant config"
+    local _public_key=$(echo "$TK_BEEINSTANT_KEY" | cut -d ":" -f 1)
+    local _data=$(echo "$TK_BEEINSTANT_KEY" | cut -d ":" -f 2)
+    local _private_key=$(echo "$_data" | cut -d "@" -f 1)
+    local _wss_endpoint=$(echo "$_data" | cut -d "@" -f 2)
+    local _f_supervisor="/etc/supervisor/conf.d/beeinstant.conf"
+
+    mv /etc/supervisor/conf.d/beeinstant.conf.bak /etc/supervisor/conf.d/beeinstant.conf
+    mv /etc/telegraf/telegraf.d/beeinstant.conf.bak /etc/telegraf/telegraf.d/beeinstant.conf
+
+    sed -i "s#_public_key_#${_public_key}#g" $_f_supervisor
+    sed -i "s#_private_key_#${_private_key}#g" $_f_supervisor
+    sed -i "s#_wss_endpoint_#${_wss_endpoint}#g" $_f_supervisor
+
+  else
+    echo ":: Beeinstant will not run because Telegraf is running or TK_BEEINSTANT_KEY isn't config"
+    rm -f /etc/supervisor/conf.d/beeinstant.conf
+  fi
 }
 
 exec_supervisord() {
@@ -115,5 +176,10 @@ else
   _init_superslacker
   _init_newrelic
   _init_tdagent
+  if [[ -z "$TK_BEEINSTANT_KEY" ]]; then
+    _init_telegraf
+  else 
+    _init_beeinstant
+  fi 
   exec_supervisord
 fi
