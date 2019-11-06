@@ -96,10 +96,10 @@ RUN curl -sSL https://github.com/arnaud-lb/php-rdkafka/archive/3.0.5.tar.gz | ta
 # Install GRPC & Protobuf
 RUN apt-get update \
     && pecl install grpc \
-    && echo "extension=grpc.so" > /etc/php/7.2/mods-available/grpc.ini \
+    && echo "extension=grpc.so" > /etc/php/7.1/mods-available/grpc.ini \
     && phpenmod grpc \
     && pecl install protobuf \
-    && echo "extension=protobuf.so" > /etc/php/7.2/mods-available/protobuf.ini \
+    && echo "extension=protobuf.so" > /etc/php/7.1/mods-available/protobuf.ini \
     && phpenmod protobuf
 
 # Install nodejs, npm, phalcon & composer
@@ -141,10 +141,10 @@ RUN wget https://beeinstant.com/statsbee.tar.gz \
 # configuration
 COPY conf/nginx/vhost.conf /etc/nginx/sites-available/default
 COPY conf/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY conf/php72/php.ini /etc/php/7.2/fpm/php.ini
-COPY conf/php72/cli.php.ini /etc/php/7.2/cli/php.ini
-COPY conf/php72/php-fpm.conf /etc/php/7.2/fpm/php-fpm.conf
-COPY conf/php72/www.conf /etc/php/7.2/fpm/pool.d/www.conf
+COPY conf/php71/php.ini /etc/php/7.1/fpm/php.ini
+COPY conf/php71/cli.php.ini /etc/php/7.1/cli/php.ini
+COPY conf/php71/php-fpm.conf /etc/php/7.1/fpm/php-fpm.conf
+COPY conf/php71/www.conf /etc/php/7.1/fpm/pool.d/www.conf
 COPY conf/supervisor/supervisord.conf /etc/supervisord.conf
 COPY conf/supervisor/conf.d/* /etc/supervisor/conf.d/
 COPY conf/td-agent/td-agent.conf /etc/td-agent/td-agent.conf
