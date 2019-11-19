@@ -39,6 +39,7 @@ RUN add-apt-repository -y ppa:nginx/stable \
     supervisor \
     python-pip \
     nginx \
+    ruby-dev \
     php7.2-common \
     php7.2-dev \
     php7.2-fpm \
@@ -137,6 +138,9 @@ RUN curl -sSL https://raw.githubusercontent.com/luk4hn/superslacker/state_change
 RUN wget https://beeinstant.com/statsbee.tar.gz \
     && tar zxvf statsbee.tar.gz \
     && cp -R agent /opt/statsbee
+
+# Install fluentd google plugin
+RUN gem install fluent-plugin-google-cloud
 
 # configuration
 COPY conf/nginx/vhost.conf /etc/nginx/sites-available/default
