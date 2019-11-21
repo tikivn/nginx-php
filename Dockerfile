@@ -139,8 +139,8 @@ RUN wget https://beeinstant.com/statsbee.tar.gz \
     && tar zxvf statsbee.tar.gz \
     && cp -R agent /opt/statsbee
 
-# Install fluentd google plugin
-RUN gem install fluent-plugin-google-cloud
+# Install google fluentd plugin
+RUN td-agent-gem install fluent-plugin-google-cloud
 
 # configuration
 COPY conf/nginx/vhost.conf /etc/nginx/sites-available/default
