@@ -39,31 +39,31 @@ RUN add-apt-repository -y ppa:nginx/stable \
     supervisor \
     python-pip \
     nginx \
-    php7.2-common \
-    php7.2-dev \
-    php7.2-fpm \
-    php7.2-bcmath \
-    php7.2-curl \
-    php7.2-gd \
-    php7.2-geoip \
-    php7.2-imagick \
-    php7.2-intl \
-    php7.2-json \
-    php7.2-ldap \
-    php7.2-mbstring \
-    php7.2-memcache \
-    php7.2-memcached \
-    php7.2-mongo \
-    php7.2-mysqlnd \
-    php7.2-pgsql \
-    php7.2-redis \
-    php7.2-sqlite \
-    php7.2-xml \
-    php7.2-xmlrpc \
-    php7.2-zip \
-    php7.2-soap \
-    php7.2-xdebug \
-    php7.2-amqp \
+    php7.4-common \
+    php7.4-dev \
+    php7.4-fpm \
+    php7.4-bcmath \
+    php7.4-curl \
+    php7.4-gd \
+    php7.4-geoip \
+    php7.4-imagick \
+    php7.4-intl \
+    php7.4-json \
+    php7.4-ldap \
+    php7.4-mbstring \
+    php7.4-memcache \
+    php7.4-memcached \
+    php7.4-mongo \
+    php7.4-mysqlnd \
+    php7.4-pgsql \
+    php7.4-redis \
+    php7.4-sqlite \
+    php7.4-xml \
+    php7.4-xmlrpc \
+    php7.4-zip \
+    php7.4-soap \
+    php7.4-xdebug \
+    php7.4-amqp \
     newrelic-php5 \
 && phpdismod xdebug newrelic opcache \
 && (curl -L https://toolbelt.treasuredata.com/sh/install-ubuntu-bionic-td-agent3.sh | sh) \
@@ -77,7 +77,7 @@ RUN git clone -b 0.1.9 --recursive --depth=1 https://github.com/kjdev/php-ext-sn
     && cd php-ext-snappy \
     && phpize \
     && ./configure && make && make install \
-    && echo "extension=snappy.so" > /etc/php/7.2/mods-available/snappy.ini \
+    && echo "extension=snappy.so" > /etc/php/7.4/mods-available/snappy.ini \
     && phpenmod snappy \
     && cd .. && rm -rf php-ext-snappy
 
@@ -90,16 +90,16 @@ RUN curl -sSL https://github.com/edenhill/librdkafka/archive/v0.11.5.tar.gz | ta
 RUN curl -sSL https://github.com/arnaud-lb/php-rdkafka/archive/3.0.5.tar.gz | tar xz \
     && cd php-rdkafka-3.0.5 \
     && phpize && ./configure && make all && make install \
-    && echo "extension=rdkafka.so" > /etc/php/7.2/mods-available/rdkafka.ini \
+    && echo "extension=rdkafka.so" > /etc/php/7.4/mods-available/rdkafka.ini \
     && phpenmod rdkafka \
     && cd .. && rm -rf php-rdkafka-3.0.5
 
 # Install GRPC & Protobuf
 RUN pecl install grpc \
-    && echo "extension=grpc.so" > /etc/php/7.2/mods-available/grpc.ini \
+    && echo "extension=grpc.so" > /etc/php/7.4/mods-available/grpc.ini \
     && phpenmod grpc \
     && pecl install protobuf \
-    && echo "extension=protobuf.so" > /etc/php/7.2/mods-available/protobuf.ini \
+    && echo "extension=protobuf.so" > /etc/php/7.4/mods-available/protobuf.ini \
     && phpenmod protobuf
 
 # Install nodejs, npm, phalcon & composer
@@ -141,10 +141,10 @@ RUN wget https://beeinstant.com/statsbee.tar.gz \
 # configuration
 COPY conf/nginx/vhost.conf /etc/nginx/sites-available/default
 COPY conf/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY conf/php72/php.ini /etc/php/7.2/fpm/php.ini
-COPY conf/php72/cli.php.ini /etc/php/7.2/cli/php.ini
-COPY conf/php72/php-fpm.conf /etc/php/7.2/fpm/php-fpm.conf
-COPY conf/php72/www.conf /etc/php/7.2/fpm/pool.d/www.conf
+COPY conf/php74/php.ini /etc/php/7.4/fpm/php.ini
+COPY conf/php74/cli.php.ini /etc/php/7.4/cli/php.ini
+COPY conf/php74/php-fpm.conf /etc/php/7.4/fpm/php-fpm.conf
+COPY conf/php74/www.conf /etc/php/7.4/fpm/pool.d/www.conf
 COPY conf/supervisor/supervisord.conf /etc/supervisord.conf
 COPY conf/supervisor/conf.d/* /etc/supervisor/conf.d/
 COPY conf/td-agent/td-agent.conf /etc/td-agent/td-agent.conf

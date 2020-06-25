@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PHP_VERSION="7.2"
+PHP_VERSION="7.4"
 
 # enable xdebug if ENV variable TK_XDEBUG_ENABLED == 1
 _init_xdebug() {
