@@ -41,7 +41,7 @@ _init_worker() {
     sed -i 's#autostart=.*#autostart=false#g' /etc/supervisord.conf  # dont start nginx, php-fpm
     # include worker config
     [[ -d /etc/supervisor.d ]] || mkdir -v /etc/supervisor.d
-    grep -q include /etc/supervisord.conf \
+    grep -q /etc/supervisor.d/*.conf /etc/supervisord.conf \
     || echo -e "[include]\nfiles = /etc/supervisor.d/*.conf\n" >> /etc/supervisord.conf
   fi
 }
