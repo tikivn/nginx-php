@@ -87,12 +87,12 @@ RUN curl -sSL https://github.com/edenhill/librdkafka/archive/v0.11.5.tar.gz | ta
     && ./configure && make && make install \
     && cd .. && rm -rf librdkafka-0.11.5
 
-RUN curl -sSL https://github.com/arnaud-lb/php-rdkafka/archive/3.0.5.tar.gz | tar xz \
-    && cd php-rdkafka-3.0.5 \
+RUN curl -sSL https://github.com/arnaud-lb/php-rdkafka/archive/4.0.3.tar.gz | tar xz \
+    && cd php-rdkafka-4.0.3 \
     && phpize && ./configure && make all && make install \
     && echo "extension=rdkafka.so" > /etc/php/7.4/mods-available/rdkafka.ini \
     && phpenmod rdkafka \
-    && cd .. && rm -rf php-rdkafka-3.0.5
+    && cd .. && rm -rf php-rdkafka-4.0.3
 
 # Install GRPC & Protobuf
 RUN pecl install grpc \
